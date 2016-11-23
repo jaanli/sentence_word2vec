@@ -23,6 +23,25 @@ perl -i -pe 's/the/\nthe/g' text8_split
 gawk -iinplace 'NF>=2' text8_split
 ```
 
+Because we need bazel to compile the C++ ops, this code needs to be in the main tensorflow repo in the models directory.
+```
+git clone https://github.com/tensorflow/tensorflow
+cd tensorflow
+git checkout v0.11.0
+./configure  # answer the prompts
+git clone https://github.com/altosaar/sentence_word2vec tensorflow/models/sentence_word2vec
+```
+
+Then, to run the code with a sentence-level context window:
+```
+# needs to be run from the tensorflow directory (where bazel WORKSPACE file is)
+bazel run -c opt tensorflow/models/sentence_word2vec/word2vec_optimized -- \
+    --train_data /path/to/text8_split \
+    --eval_data /path/to/questions-words.txt \
+    --save_path /tmp \
+    --sentence_level True
+```
+
 Original word2vec code from TensorFlow v0.11.0 ([link to source at this commit](https://github.com/tensorflow/tensorflow/tree/v0.11.0/tensorflow/models/embedding)).
 
 This directory contains models for unsupervised training of word embeddings
@@ -44,27 +63,6 @@ wget https://storage.googleapis.com/google-code-archive-source/v2/code.google.co
 unzip -p source-archive.zip  word2vec/trunk/questions-words.txt > questions-words.txt
 rm source-archive.zip
 ```
-
-Assuming you are using the pip package install and have cloned the git
-repository, navigate into this directory and run using:
-
-```shell
-cd tensorflow/models/embedding
-python word2vec_optimized.py \
-  --train_data=text8 \
-  --eval_data=questions-words.txt \
-  --save_path=/tmp/
-```
-
-To run the code from sources using bazel:
-
-```shell
-bazel run -c opt tensorflow/models/embedding/word2vec_optimized -- \
-  --train_data=text8 \
-  --eval_data=questions-words.txt \
-  --save_path=/tmp/
-```
-
 Here is a short overview of what is in this directory.
 
 File | What's in it?
@@ -73,5 +71,5 @@ File | What's in it?
 `word2vec_test.py` | Integration test for word2vec.
 `word2vec_optimized.py` | A version of word2vec implemented using C ops that does no minibatching.
 `word2vec_optimized_test.py` | Integration test for word2vec_optimized.
-`word2vec_kernels.cc` | Kernels for the custom input and training ops.
+`word2vec_kernels.cc` | Kernels for the custom input and training ops, including sentence-level contexts.
 `word2vec_ops.cc` | The declarations of the custom ops.
