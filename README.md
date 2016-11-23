@@ -42,7 +42,7 @@ bazel run -c opt tensorflow/models/sentence_word2vec/word2vec_optimized -- \
     --sentence_level True
 ```
 
-On a Macbook Air with the following config, the speed is around 17k words/second. This is up from around 2k words/second with a manual python implementation.
+On a Macbook Air with the following config, the speed is around 17k words/second. This is up from around 2k words/second with a [manual python implementation](https://github.com/altosaar/scirec).
 ```
 ➜  ~ sysctl -n machdep.cpu.brand_string
 Intel(R) Core(TM) i7-4650U CPU @ 1.70GHz
