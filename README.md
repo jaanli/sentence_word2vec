@@ -42,6 +42,12 @@ bazel run -c opt tensorflow/models/sentence_word2vec/word2vec_optimized -- \
     --sentence_level True
 ```
 
+On a Macbook Air with the following config, the speed is around 17k words/second. This is up from around 2k words/second with a manual python implementation.
+```
+➜  ~ sysctl -n machdep.cpu.brand_string
+Intel(R) Core(TM) i7-4650U CPU @ 1.70GHz
+```
+
 Original word2vec code from TensorFlow v0.11.0 ([link to source at this commit](https://github.com/tensorflow/tensorflow/tree/v0.11.0/tensorflow/models/embedding)).
 
 This directory contains models for unsupervised training of word embeddings
