@@ -1,11 +1,37 @@
+# sentence_word2vec
+word2vec with a context based on sentences, in C++.
+
+This is based on the tensorflow implementation of word2vec.
+
+However, the context for the model is defined differently:
+
+* the context for the model is defined in terms of sentences.
+* the context for a given word is the rest of words in a sentence.
+
+This is implemented in C++ in the `word2vec_kernels.cc` file.
+
+Why might this be useful? This can be used to model playlists or
+user histories for recommendation! Or any other kind of 'bagged' data.
+
+To split the `text8` dataset (described / available below) into sentences:
+```
+cp text8 text8_split
+# add newlines after every 'the' just for debugging
+perl -i -pe 's/the/\nthe/g' text8_split
+# remove lines that have a single word, because they will have no context
+# may need to install gawk
+gawk -iinplace 'NF>=2' text8_split
+```
+
+Original word2vec code from TensorFlow v0.11.0 ([link to source at this commit](https://github.com/tensorflow/tensorflow/tree/v0.11.0/tensorflow/models/embedding)).
+
 This directory contains models for unsupervised training of word embeddings
 using the model described in:
-
 (Mikolov, et. al.) [Efficient Estimation of Word Representations in Vector Space](http://arxiv.org/abs/1301.3781),
 ICLR 2013.
 
 Detailed instructions on how to get started and use them are available in the
-tutorials. Brief instructions are below.
+tensorflow tutorials. Brief instructions are below.
 
 * [Word2Vec Tutorial](http://tensorflow.org/tutorials/word2vec/index.md)
 
