@@ -27,7 +27,8 @@ Because we need bazel to compile the C++ ops, this code needs to be in the main 
 ```
 git clone https://github.com/tensorflow/tensorflow
 cd tensorflow
-git checkout v0.11.0
+# checkout the specific commit close to v0.11.0
+git checkout a4c8df209d7413068f4ed3e71c43eb798fbd5580 .
 ./configure  # answer the prompts
 git clone https://github.com/altosaar/sentence_word2vec tensorflow/models/sentence_word2vec
 ```
