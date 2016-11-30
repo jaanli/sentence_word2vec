@@ -41,7 +41,8 @@ from six.moves import xrange  # pylint: disable=redefined-builtin
 import numpy as np
 import tensorflow as tf
 
-from tensorflow.models.embedding_sentence_level import gen_word2vec as word2vec
+from tensorflow.models.sentence_word2vec import gen_sentence_word2vec as sentence_word2vec
+from tensorflow.models.embedding import gen_word2vec as word2vec
 
 flags = tf.app.flags
 
@@ -81,6 +82,7 @@ flags.DEFINE_boolean(
     "model. E.g., try model.analogy(b'france', b'paris', b'russia') and "
     "model.nearby([b'proton', b'elephant', b'maxwell'])")
 flags.DEFINE_boolean("sentence_level", False, "sentence level skipgram")
+flags.DEFINE_boolean("eval", True, "evaluate the model")
 
 FLAGS = flags.FLAGS
 
@@ -149,6 +151,7 @@ class Word2Vec(object):
     self._id2word = []
     self.build_graph()
     self.build_eval_graph()
+
     self.save_vocab()
 
   def read_analogies(self):
@@ -182,7 +185,7 @@ class Word2Vec(object):
 
     # The training data. A text file.
     if opts.sentence_level:
-      skipgram_op = word2vec.skipgram_sentence
+      skipgram_op = sentence_word2vec.skipgram_sentence
     else:
       skipgram_op = word2vec.skipgram
     (words, counts, words_per_epoch, current_epoch, total_words_processed,
@@ -422,17 +425,19 @@ def _start_shell(local_ns=None):
 
 def main(_):
   """Train a word2vec model."""
-  if not FLAGS.train_data or not FLAGS.eval_data or not FLAGS.save_path:
-    print("--train_data --eval_data and --save_path must be specified.")
+  if not FLAGS.train_data or not FLAGS.save_path:
+    print("--train_data and --save_path must be specified.")
     sys.exit(1)
   opts = Options()
   with tf.Graph().as_default(), tf.Session() as session:
     with tf.device("/cpu:0"):
       model = Word2Vec(opts, session)
-      model.read_analogies() # Read analogy questions
+      if FLAGS.eval:
+        model.read_analogies() # Read analogy questions
     for _ in xrange(opts.epochs_to_train):
       model.train()  # Process one epoch
-      model.eval()  # Eval analogies.
+      if FLAGS.eval:
+        model.eval()  # Eval analogies.
     # Perform a final save.
     model.saver.save(session, os.path.join(opts.save_path, "model.ckpt"),
                      global_step=model.global_step)

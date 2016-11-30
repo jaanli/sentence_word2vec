@@ -1,5 +1,5 @@
 # Description:
-# TensorFlow model for word2vec
+# TensorFlow model for sentence word2vec
 
 package(default_visibility = ["//tensorflow:internal"])
 
@@ -17,16 +17,10 @@ py_library(
     srcs_version = "PY2AND3",
     visibility = ["//tensorflow:__subpackages__"],
     deps = [
-        ":gen_word2vec",
+        ":gen_sentence_word2vec",
         ":word2vec",
         ":word2vec_optimized",
     ],
-)
-
-py_library(
-    name = "data",
-    srcs = ["data.py"],
-    srcs_version = "PY2AND3",
 )
 
 py_binary(
@@ -36,9 +30,10 @@ py_binary(
     ],
     srcs_version = "PY2AND3",
     deps = [
-        ":gen_word2vec",
+        ":gen_sentence_word2vec",
         "//tensorflow:tensorflow_py",
         "//tensorflow/python:platform",
+	"//tensorflow/models/embedding:gen_word2vec",
     ],
 )
 
@@ -49,26 +44,12 @@ py_binary(
     ],
     srcs_version = "PY2AND3",
     deps = [
-        ":gen_word2vec",
+        ":gen_sentence_word2vec",
         "//tensorflow:tensorflow_py",
         "//tensorflow/python:platform",
+	"//tensorflow/models/embedding:gen_word2vec",
     ],
 )
-
-py_binary(
-    name = "bib2vec",
-    srcs = [
-	"bib2vec.py",
-    ],
-    srcs_version = "PY2AND3",
-    deps = [
-	":gen_word2vec",
-	":data",
-	"//tensorflow:tensorflow_py",
-	"//tensorflow/python:platform",
-    ],
-)
-
 
 py_test(
     name = "word2vec_test",
@@ -99,9 +80,9 @@ py_test(
 )
 
 cc_library(
-    name = "word2vec_ops",
+    name = "sentence_word2vec_ops",
     srcs = [
-        "word2vec_ops.cc",
+        "sentence_word2vec_ops.cc",
     ],
     linkstatic = 1,
     visibility = ["//tensorflow:internal"],
@@ -112,23 +93,24 @@ cc_library(
 )
 
 cc_library(
-    name = "word2vec_kernels",
+    name = "sentence_word2vec_kernels",
     srcs = [
-        "word2vec_kernels.cc",
+        "sentence_word2vec_kernels.cc",
     ],
     linkstatic = 1,
     visibility = ["//tensorflow:internal"],
     deps = [
-        ":word2vec_ops",
+        ":sentence_word2vec_ops",
+	"//tensorflow/models/embedding:word2vec_ops",
         "//tensorflow/core",
     ],
     alwayslink = 1,
 )
 
 tf_gen_op_wrapper_py(
-    name = "gen_word2vec",
-    out = "gen_word2vec.py",
-    deps = [":word2vec_ops"],
+    name = "gen_sentence_word2vec",
+    out = "gen_sentence_word2vec.py",
+    deps = [":sentence_word2vec_ops"],
 )
 
 filegroup(
