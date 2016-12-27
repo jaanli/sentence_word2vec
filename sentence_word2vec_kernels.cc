@@ -152,7 +152,6 @@ class SkipgramSentenceOp : public OpKernel {
         ++total_words_processed_;
         example_counter_ = 0;
         if (example_pos_ >= sentence_size_) {
-          ++total_words_processed_;
           example_pos_ = 0;
           ++total_sentences_processed_;
           ++corpus_sentences_index_;
@@ -175,12 +174,13 @@ class SkipgramSentenceOp : public OpKernel {
           break;
         }
       }
-    }
-    while (true) {
-      label_pos_ = rng_.Uniform(sentence_size_);
-      if (example_pos_ != label_pos_) {
-        break;
+      while (true) {
+        label_pos_ = rng_.Uniform(sentence_size_);
+        if (example_pos_ != label_pos_) {
+          break;
+        }
       }
+      break;
     }
     *example = corpus_sentences_[corpus_sentences_index_][example_pos_];
     *label = corpus_sentences_[corpus_sentences_index_][label_pos_];
