@@ -41,8 +41,8 @@ from six.moves import xrange  # pylint: disable=redefined-builtin
 import numpy as np
 import tensorflow as tf
 
-from tensorflow.models.sentence_word2vec import gen_sentence_word2vec as sentence_word2vec
-from tensorflow.models.embedding import gen_word2vec as word2vec
+word2vec = tf.load_op_library(os.path.join(os.path.dirname(os.path.realpath(__file__)),'word2vec_ops.so'))
+sentence_word2vec = tf.load_op_library(os.path.join(os.path.dirname(os.path.realpath(__file__)),'sentence_word2vec_ops.so'))
 
 flags = tf.app.flags
 
@@ -72,7 +72,7 @@ flags.DEFINE_integer("window_size", 5,
 flags.DEFINE_integer("min_count", 5,
                      "The minimum number of word occurrences for it to be "
                      "included in the vocabulary.")
-flags.DEFINE_float("subsample", 1e-3,
+flags.DEFINE_float("subsample", 0.,
                    "Subsample threshold for word occurrence. Words that appear "
                    "with higher frequency will be randomly down-sampled. Set "
                    "to 0 to disable.")
@@ -187,7 +187,7 @@ class Word2Vec(object):
     if opts.sentence_level:
       skipgram_op = sentence_word2vec.skipgram_sentence
     else:
-      skipgram_op = word2vec.skipgram
+      skipgram_op = word2vec.skipgram_word2vec
     (words, counts, words_per_epoch, current_epoch, total_words_processed,
      examples, labels) = skipgram_op(filename=opts.train_data,
                                      batch_size=opts.batch_size,
@@ -228,13 +228,13 @@ class Word2Vec(object):
     # Training nodes.
     inc = global_step.assign_add(1)
     with tf.control_dependencies([inc]):
-      train = word2vec.neg_train(w_in,
-                                 w_out,
-                                 examples,
-                                 labels,
-                                 lr,
-                                 vocab_count=opts.vocab_counts.tolist(),
-                                 num_negative_samples=opts.num_samples)
+      train = word2vec.neg_train_word2vec(w_in,
+                                          w_out,
+                                          examples,
+                                          labels,
+                                          lr,
+                                          vocab_count=opts.vocab_counts.tolist(),
+                                          num_negative_samples=opts.num_samples)
 
     self._w_in = w_in
     self._examples = examples

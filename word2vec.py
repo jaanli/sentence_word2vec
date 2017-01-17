@@ -42,7 +42,9 @@ from six.moves import xrange  # pylint: disable=redefined-builtin
 import numpy as np
 import tensorflow as tf
 
-from tensorflow.models.embedding_sentence_level import gen_word2vec as word2vec
+word2vec = tf.load_op_library(os.path.join(os.path.dirname(os.path.realpath(__file__)),'word2vec_ops.so'))
+sentence_word2vec = tf.load_op_library(os.path.join(os.path.dirname(os.path.realpath(__file__)),'sentence_word2vec_ops.so'))
+
 
 flags = tf.app.flags
 
@@ -250,7 +252,7 @@ class Word2Vec(object):
     sampled_b = tf.nn.embedding_lookup(sm_b, sampled_ids)
 
     # True logits: [batch_size, 1]
-    true_logits = tf.reduce_sum(tf.mul(example_emb, true_w), 1) + true_b
+    true_logits = tf.reduce_sum(tf.multiply(example_emb, true_w), 1) + true_b
 
     # Sampled logits: [batch_size, num_sampled]
     # We replicate sampled noise labels for all examples in the batch
@@ -350,9 +352,9 @@ class Word2Vec(object):
     """Build the graph for the full model."""
     opts = self._options
     if opts.sentence_level:
-      skipgram_op = word2vec.skipgram_sentence
+      skipgram_op = sentence_word2vec.skipgram_sentence
     else:
-      skipgram_op = word2vec.skipgram
+      skipgram_op = word2vec.skipgram_word2vec
     # The training data. A text file.
     (words, counts, words_per_epoch, self._epoch, self._words, examples,
      labels) = skipgram_op(filename=opts.train_data,
