@@ -19,6 +19,8 @@ To compile the C++ ops used:
 ```
 git clone https://github.com/altosaar/sentence_word2vec
 cd sentence_word2vec
+# pull the models repo submodule
+git submodule update --init
 ./compile_ops.sh
 ```
 
