@@ -31,6 +31,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import h5py
 import os
 import sys
 import threading
@@ -59,7 +60,7 @@ flags.DEFINE_integer(
     "Number of epochs to train. Each epoch processes the training data once "
     "completely.")
 flags.DEFINE_float("learning_rate", 0.025, "Initial learning rate.")
-flags.DEFINE_integer("num_neg_samples", 25,
+flags.DEFINE_integer("num_neg_samples", 5,
                      "Negative samples per training example.")
 flags.DEFINE_integer("batch_size", 500,
                      "Numbers of training examples each step processes "
@@ -81,8 +82,9 @@ flags.DEFINE_boolean(
     "If true, enters an IPython interactive session to play with the trained "
     "model. E.g., try model.analogy(b'france', b'paris', b'russia') and "
     "model.nearby([b'proton', b'elephant', b'maxwell'])")
-flags.DEFINE_boolean("sentence_level", False, "sentence level skipgram")
-flags.DEFINE_boolean("eval", True, "evaluate the model")
+flags.DEFINE_boolean("sentence_level", True, "sentence level skipgram")
+flags.DEFINE_boolean("eval", False, "evaluate the model")
+flags.DEFINE_bool("save_embeddings", False, "Save the embeddings.")
 
 FLAGS = flags.FLAGS
 
@@ -139,6 +141,9 @@ class Options(object):
 
     # The text file for eval.
     self.eval_data = FLAGS.eval_data
+
+    # Save embeddings
+    self.save_embeddings = FLAGS.save_embeddings
 
 
 class Word2Vec(object):
@@ -215,6 +220,7 @@ class Word2Vec(object):
 
     # Global step: scalar, i.e., shape [].
     w_out = tf.Variable(tf.zeros([opts.vocab_size, opts.emb_dim]), name="w_out")
+    self._w_out = w_out
 
     # Global step: []
     global_step = tf.Variable(0, name="global_step")
@@ -272,6 +278,7 @@ class Word2Vec(object):
 
     # Normalized word embeddings of shape [vocab_size, emb_dim].
     nemb = tf.nn.l2_normalize(self._w_in, 1)
+    self._nemb = nemb
 
     # Each row of a_emb, b_emb, c_emb is a word's embedding vector.
     # They all have the shape [N, emb_dim]
@@ -412,6 +419,15 @@ class Word2Vec(object):
       for (neighbor, distance) in zip(idx[i, :num], vals[i, :num]):
         print("%-20s %6.4f" % (self._id2word[neighbor], distance))
 
+  def save_embeddings(self):
+    opts = self._options
+    nemb = self._nemb.eval()
+    sm_w_t = self._w_out.eval()
+    f = h5py.File(os.path.join(opts.save_path, "embeddings.h5"), 'w')
+    f.create_dataset("nemb", data=nemb, dtype=np.float32)
+    f.create_dataset("sm_w_t", data=sm_w_t, dtype=np.float32)
+    f.close()
+
 
 def _start_shell(local_ns=None):
   # An interactive shell is useful for debugging/development.
@@ -438,6 +454,8 @@ def main(_):
       model.train()  # Process one epoch
       if FLAGS.eval:
         model.eval()  # Eval analogies.
+      if FLAGS.save_embeddings:
+        model.save_embeddings()
     # Perform a final save.
     model.saver.save(session, os.path.join(opts.save_path, "model.ckpt"),
                      global_step=model.global_step)
